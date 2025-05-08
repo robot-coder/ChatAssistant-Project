@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Assistant</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #chat { max-width: 600px; margin: auto; }
+        #messages { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; }
+        .message { margin: 5px 0; }
+        .user { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="chat">
+        <h1>Chat Assistant</h1>
+        <div id="messages"></div>
+        <input type="text" id="userInput" placeholder="Type your message..." />
+        <button id="sendButton">Send</button>
+    </div>
+
+    <script>
+        const sendButton = document.getElementById('sendButton');
+        const userInput = document.getElementById('userInput');
+        const messagesDiv = document.getElementById('messages');
+        let conversation = [];
+
+        sendButton.addEventListener('click', async () => {
+            const userMessage = userInput.value;
+            if (!userMessage) return;
+
+            // Display user message
+            conversation.push({ role: 'user', content: userMessage });
+            updateMessages();
+
+            // Send message to the server
+            const response = await fetch('/chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: userMessage, llm_choice: 'default' })
+            });
+
+            const data = await response.json();
+            conversation.push({ role: 'assistant', content: data.response });
+            updateMessages();
+            userInput.value = '';
+        });
+
+        function updateMessages() {
+            messagesDiv.innerHTML = '';
+            conversation.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.innerHTML = `<span class='${msg.role}'>${msg.role}:</span> ${msg.content}`;
+                messagesDiv.appendChild(messageDiv);
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
